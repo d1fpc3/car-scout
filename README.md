@@ -65,3 +65,22 @@ repo secret (also in the local `.env`, which is not committed).
 
 GitHub Actions, every 15 minutes (`.github/workflows/scout.yml`). State lives in the
 Actions cache, not in the repo, and CI logs print counts only.
+GitHub's cron for this repo never fired on its own, so D1's PC also starts the scout whenever
+nothing has run for 14 minutes (system-watch rider `car-scout-kick`). Either one counts.
+
+## Car market (d1fpc3.com/cars)
+
+`market.mjs` runs daily (`.github/workflows/market.yml`) and publishes to the orphan
+`market-data` branch, which the dashboard reads:
+
+- **Sold:** every finished Bring a Trailer auction for the makes in `market/makes.json`.
+- **Generations:** `market/generations.json` splits models whose name spans decades
+  (911 = 964 / 993 / 996 / 997 / 991 / 992, Corvette C1 to C8, M3 E30 to G80...). A chassis
+  code in the title wins, otherwise the model year decides.
+- **For sale now:** nationwide Craigslist asking prices for each make's main models
+  (14 regional searches merged, reposts removed, only the model years that sell at auction).
+  Listings that vanish between runs count as gone, which gives days to sell. Only hashed ids
+  and aggregates are published.
+- **Movers:** biggest 90-day changes, by generation where a model has them, 15+ sales each side.
+
+`node market.mjs --no-forsale` skips the Craigslist pass for a quick local run.
