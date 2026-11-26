@@ -132,10 +132,14 @@ async function main() {
   }
 
   // Alert new deals, and old ones again only after a real price drop.
+  // The same car crossposted in two towns counts once (same year/model/odometer).
   let sent = 0;
+  const carKey = (d) => `${d.year}|${d.make}|${d.model}|${d.miles ? Math.round(d.miles / 1000) : d.id}`;
+  const alertedCars = new Set(Object.values(state.alerted).map((a) => a.car).filter(Boolean));
   for (const d of deals) {
     const prev = state.alerted[d.id];
     if (prev && d.price > prev.price - cfg.realertDrop) continue;
+    if (!prev && alertedCars.has(carKey(d))) continue;
     if (sent >= cfg.maxAlertsPerRun) break;
     const dropped = prev ? ` (dropped from ${money(prev.price)})` : '';
     const title = `${money(d.profit)} under · ${d.year} ${cap(d.make)} ${cap(d.model)}`;
@@ -150,8 +154,9 @@ async function main() {
     else {
       try { await notify({ title, message: lines.join('\n'), url: d.url, image: d.image }); }
       catch (e) { console.warn(`alert failed: ${e.message}`); continue; }
-      state.alerted[d.id] = { price: d.price, at: now };
+      state.alerted[d.id] = { price: d.price, at: now, car: carKey(d) };
     }
+    alertedCars.add(carKey(d));
     sent++;
   }
 
