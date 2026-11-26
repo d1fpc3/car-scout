@@ -43,3 +43,27 @@ test('values a car from comps and ignores junk prices', () => {
   assert.equal(valueOf(models, { make: 'honda', model: 'civic', year: year - 30, miles: 90000 }), null, 'no extrapolating past comps');
   assert.equal(valueOf(models, { make: 'kia', model: 'soul', year: year - 5, miles: 60000 }), null);
 });
+
+test('board payload is ciphertext only and opens with the passphrase', async () => {
+  const { boardData, seal, unseal } = await import('../lib/board.mjs');
+  const cfg = { postal: '21201', radius: 75, flipCost: 1000, buy: { minPrice: 1500, maxPrice: 15000, minProfit: 2000, maxAgeHours: 72 } };
+  const deals = [
+    { id: '2', year: 2010, make: 'toyota', model: 'camry', miles: 120000, price: 4000, low: 6500, posted: 1, place: 'BOWIE', title: 'camry', url: 'javascript:alert(1)', image: 'https://evil.example/x.jpg', flags: [] },
+    { id: '1', year: 2012, make: 'honda', model: 'accord', miles: 140000, price: 5000, low: 8500, posted: 2, dist: 12.4, place: 'Towson', title: 'SECRET-CAR', url: 'https://baltimore.craigslist.org/cto/d/x/1.html', image: 'https://images.craigslist.org/abc_600x450.jpg', flags: ['as-is'] },
+  ];
+  const data = boardData({ at: 123, deals, checked: 10412, cfg });
+  assert.deepEqual(data.deals.map((d) => d.car), ['2012 Honda Accord', '2010 Toyota Camry'], 'ranked by profit');
+  assert.equal(data.deals[0].profit, 2500, 'profit = value - asking - flip cost');
+  assert.equal(data.deals[0].dist, 12);
+  assert.equal(data.deals[1].place, 'Bowie');
+  assert.equal(data.deals[1].url, null, 'only Craigslist links');
+  assert.equal(data.deals[1].image, null, 'only Craigslist photos');
+
+  const box = await seal(data, 'test pass', 1000);
+  const text = JSON.stringify(box);
+  for (const leak of ['SECRET-CAR', 'Accord', 'Towson', '10412', 'craigslist']) assert.ok(!text.includes(leak), `payload leaks ${leak}`);
+  assert.deepEqual(Object.keys(box), ['v', 'kdf', 'hkdf', 'iv', 'ct']);
+  assert.deepEqual(await unseal(box, 'test pass'), data);
+  await assert.rejects(unseal(box, 'wrong pass'));
+  assert.notEqual((await seal(data, 'test pass', 1000)).hkdf.salt, box.hkdf.salt, 'fresh salt every build');
+});

@@ -14,8 +14,8 @@ listings, and pushes the underpriced private-seller ones to your phone.
 4. **Confirm.** It opens the listing: clean title only, real odometer, and nothing like
    salvage / needs transmission / not running / $500 down / escrow in the text.
    Softer words (as-is, check engine, rust) ride along in the alert.
-5. **Alert.** Push via ntfy with the photo; tap opens the listing. Re-alerts only on a
-   $400+ price drop.
+5. **Alert.** Push via ntfy with the photo; tap opens the listing, **All deals** opens the
+   board. Re-alerts only on a $400+ price drop.
 
 ## Run it
 
@@ -26,7 +26,35 @@ node scout.mjs --full    # force the full comps refresh
 npm test
 ```
 
-Knobs are in `config.json` (zip, radius, price range, minimum profit).
+## Settings you'd change
+
+All in `config.json`. Edit it on GitHub and commit; the next run (within 15 min) uses it.
+
+| Setting | Now | What it does |
+|---|---|---|
+| `postal` | `21201` | Zip code the search is centered on. |
+| `radius` | `75` | How far (miles) you'd drive to buy. |
+| `buy.minPrice`, `buy.maxPrice` | `1500`, `15000` | Asking-price range you care about. |
+| `buy.minProfit` | `2000` | How far under value the asking price has to be before you hear about it. |
+| `flipCost` | `1000` | What a flip costs you (tax, tags, inspection, cleanup). Taken off the profit shown in alerts and on the board; doesn't change which cars qualify. |
+
+Leave the rest alone unless something looks off.
+
+## Deals board
+
+Every current deal, best profit first, with photo, miles, asking, value, profit, distance
+and how long it's been listed: **https://d1fpc3.com/cars/deals/**
+
+Each run encrypts the deals (AES-GCM) with the `BOARD_PASSPHRASE` secret and force-pushes
+just the ciphertext as one commit to the `board-data` branch. The page (in d1fpc3-site) fetches
+it and decrypts it in the browser. Nothing readable is ever public. You type the passphrase
+once per device (the browser keeps a derived key, not the passphrase). The **All deals** button
+on each alert carries it in the link's `#k=` fragment, so from the phone it opens straight in.
+That makes the ntfy topic name the real secret, so keep it private. To lock out every device,
+change the passphrase.
+
+One-time setup: add the `BOARD_PASSPHRASE` repo secret (a long random string). Without it,
+the board is skipped.
 
 ## Phone
 
