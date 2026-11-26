@@ -15,7 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resultsPage, parseItem } from './lib/bat.mjs';
+import { resultsPage, parseItem, isPart } from './lib/bat.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const M = path.join(ROOT, 'market');
@@ -96,7 +96,7 @@ async function updateMake(mk) {
     // Newest first: stop at a page with nothing new (after the first), past the window, or at the end.
     if (!r.items.length || page >= r.pages || oldest < now - KEEP_DAYS * DAY || (have.length && newOnPage === 0)) break;
   }
-  const all = [...fresh, ...have].filter((s) => s.t >= now - KEEP_DAYS * DAY).sort((a, b) => b.t - a.t);
+  const all = [...fresh, ...have].filter((s) => s.t >= now - KEEP_DAYS * DAY && !isPart(s.title)).sort((a, b) => b.t - a.t);
   writeJson(file, all);
   return { all, fresh: fresh.length };
 }

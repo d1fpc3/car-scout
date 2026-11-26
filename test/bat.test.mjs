@@ -15,6 +15,7 @@ test('skips parts, memorabilia and other makes that match the keyword', () => {
   assert.equal(parseTitle('19×8″ and 20×10″ Wheels for McLaren', ['McLaren']), null);
   assert.equal(parseTitle('Half-Scale McLaren MP4/4 Display Model', ['McLaren']), null);
   assert.equal(parseTitle('5k-Mile 2006 Mercedes-Benz SLR McLaren', ['McLaren']), null);
+  assert.equal(parseItem({ id: 9, title: '2014 McLaren P1 Body Panels', sold_text: 'Sold for USD $213,000', currency: 'USD' }, ['McLaren']), null);
 });
 
 test('uses the final price, and keeps reserve-not-met results as bids', () => {
