@@ -2,3 +2,7 @@ data/
 node_modules/
 .env
 board/
+market-run.log
+# Market data lives on the market-data branch (see .github/workflows/market.yml); only the make list is code.
+market/*
+!market/makes.json

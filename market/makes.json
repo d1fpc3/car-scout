@@ -1,0 +1,301 @@
+[
+ {
+  "key": "mclaren",
+  "name": "McLaren",
+  "tier": "exotic",
+  "titles": [
+   "McLaren"
+  ]
+ },
+ {
+  "key": "ferrari",
+  "name": "Ferrari",
+  "tier": "exotic",
+  "titles": [
+   "Ferrari"
+  ]
+ },
+ {
+  "key": "lamborghini",
+  "name": "Lamborghini",
+  "tier": "exotic",
+  "titles": [
+   "Lamborghini"
+  ]
+ },
+ {
+  "key": "bugatti",
+  "name": "Bugatti",
+  "tier": "exotic",
+  "titles": [
+   "Bugatti"
+  ]
+ },
+ {
+  "key": "pagani",
+  "name": "Pagani",
+  "tier": "exotic",
+  "titles": [
+   "Pagani"
+  ]
+ },
+ {
+  "key": "koenigsegg",
+  "name": "Koenigsegg",
+  "tier": "exotic",
+  "titles": [
+   "Koenigsegg"
+  ]
+ },
+ {
+  "key": "porsche",
+  "name": "Porsche",
+  "tier": "sports",
+  "titles": [
+   "Porsche"
+  ]
+ },
+ {
+  "key": "aston-martin",
+  "name": "Aston Martin",
+  "tier": "exotic",
+  "titles": [
+   "Aston Martin"
+  ]
+ },
+ {
+  "key": "lotus",
+  "name": "Lotus",
+  "tier": "sports",
+  "titles": [
+   "Lotus"
+  ]
+ },
+ {
+  "key": "maserati",
+  "name": "Maserati",
+  "tier": "luxury",
+  "titles": [
+   "Maserati"
+  ]
+ },
+ {
+  "key": "bentley",
+  "name": "Bentley",
+  "tier": "luxury",
+  "titles": [
+   "Bentley"
+  ]
+ },
+ {
+  "key": "rolls-royce",
+  "name": "Rolls-Royce",
+  "tier": "luxury",
+  "titles": [
+   "Rolls-Royce"
+  ]
+ },
+ {
+  "key": "mercedes-benz",
+  "name": "Mercedes-Benz",
+  "tier": "luxury",
+  "titles": [
+   "Mercedes-Benz",
+   "Mercedes-AMG",
+   "Mercedes-Maybach"
+  ]
+ },
+ {
+  "key": "bmw",
+  "name": "BMW",
+  "tier": "sports",
+  "titles": [
+   "BMW"
+  ]
+ },
+ {
+  "key": "audi",
+  "name": "Audi",
+  "tier": "sports",
+  "titles": [
+   "Audi"
+  ]
+ },
+ {
+  "key": "jaguar",
+  "name": "Jaguar",
+  "tier": "luxury",
+  "titles": [
+   "Jaguar"
+  ]
+ },
+ {
+  "key": "land-rover",
+  "name": "Land Rover",
+  "tier": "truck",
+  "titles": [
+   "Land Rover"
+  ]
+ },
+ {
+  "key": "alfa-romeo",
+  "name": "Alfa Romeo",
+  "tier": "sports",
+  "titles": [
+   "Alfa Romeo"
+  ]
+ },
+ {
+  "key": "de-tomaso",
+  "name": "De Tomaso",
+  "tier": "exotic",
+  "titles": [
+   "De Tomaso"
+  ]
+ },
+ {
+  "key": "shelby",
+  "name": "Shelby",
+  "tier": "sports",
+  "titles": [
+   "Shelby"
+  ]
+ },
+ {
+  "key": "ford",
+  "name": "Ford",
+  "tier": "american",
+  "titles": [
+   "Ford"
+  ]
+ },
+ {
+  "key": "chevrolet",
+  "name": "Chevrolet",
+  "tier": "american",
+  "titles": [
+   "Chevrolet"
+  ]
+ },
+ {
+  "key": "dodge",
+  "name": "Dodge",
+  "tier": "american",
+  "titles": [
+   "Dodge"
+  ]
+ },
+ {
+  "key": "jeep",
+  "name": "Jeep",
+  "tier": "truck",
+  "titles": [
+   "Jeep"
+  ]
+ },
+ {
+  "key": "cadillac",
+  "name": "Cadillac",
+  "tier": "american",
+  "titles": [
+   "Cadillac"
+  ]
+ },
+ {
+  "key": "plymouth",
+  "name": "Plymouth",
+  "tier": "american",
+  "titles": [
+   "Plymouth"
+  ]
+ },
+ {
+  "key": "pontiac",
+  "name": "Pontiac",
+  "tier": "american",
+  "titles": [
+   "Pontiac"
+  ]
+ },
+ {
+  "key": "toyota",
+  "name": "Toyota",
+  "tier": "japanese",
+  "titles": [
+   "Toyota"
+  ]
+ },
+ {
+  "key": "nissan",
+  "name": "Nissan",
+  "tier": "japanese",
+  "titles": [
+   "Nissan",
+   "Datsun"
+  ]
+ },
+ {
+  "key": "honda",
+  "name": "Honda",
+  "tier": "japanese",
+  "titles": [
+   "Honda"
+  ]
+ },
+ {
+  "key": "acura",
+  "name": "Acura",
+  "tier": "japanese",
+  "titles": [
+   "Acura"
+  ]
+ },
+ {
+  "key": "lexus",
+  "name": "Lexus",
+  "tier": "japanese",
+  "titles": [
+   "Lexus"
+  ]
+ },
+ {
+  "key": "mazda",
+  "name": "Mazda",
+  "tier": "japanese",
+  "titles": [
+   "Mazda"
+  ]
+ },
+ {
+  "key": "subaru",
+  "name": "Subaru",
+  "tier": "japanese",
+  "titles": [
+   "Subaru"
+  ]
+ },
+ {
+  "key": "mitsubishi",
+  "name": "Mitsubishi",
+  "tier": "japanese",
+  "titles": [
+   "Mitsubishi"
+  ]
+ },
+ {
+  "key": "tesla",
+  "name": "Tesla",
+  "tier": "electric",
+  "titles": [
+   "Tesla"
+  ]
+ },
+ {
+  "key": "rivian",
+  "name": "Rivian",
+  "tier": "electric",
+  "titles": [
+   "Rivian"
+  ]
+ }
+]
