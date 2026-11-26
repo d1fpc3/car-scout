@@ -1,0 +1,59 @@
+name: market
+
+# Daily car market update: new Bring a Trailer results for every make in market/makes.json.
+# The data lives on the orphan branch `market-data`, replaced by a single commit each run, so the repo
+# never grows: market/sales (two years of results, the job's memory), market/models, summary.json,
+# index.json and local.json (local asking-price medians). d1fpc3.com/cars reads them from there.
+on:
+  schedule:
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+    inputs:
+      makes:
+        description: Only these makes (space-separated keys, e.g. "mclaren ferrari"); empty = all
+        default: ''
+
+concurrency:
+  group: market
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  market:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bring back yesterday's data
+        run: |
+          if git fetch -q --depth 1 origin market-data; then
+            git archive FETCH_HEAD market | tar -x
+            echo "restored $(ls market/sales 2>/dev/null | wc -l) makes"
+          else
+            echo "no market-data branch yet: full backfill"
+          fi
+      # Read-only look at the scout's comps pool for local asking-price medians. Never saved back.
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: market-never-${{ github.run_id }}
+          restore-keys: state-
+      - name: Update market
+        run: node market.mjs ${{ inputs.makes }}
+      - name: Publish to market-data
+        run: |
+          D=$(mktemp -d)
+          cp -r market "$D/"
+          cd "$D"
+          git init -q -b market-data
+          git config user.name "car-scout"
+          git config user.email "car-scout@users.noreply.github.com"
+          git add market
+          git commit -q -m "market: $(date -u +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" market-data
+          echo "published $(du -sh market | cut -f1)"
