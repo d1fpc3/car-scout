@@ -1,0 +1,254 @@
+{
+  "_": "Generations for models whose one name spans decades. make key -> model slug -> generations, oldest first. A generation's optional `match` (regex, case-insensitive) is checked against the title before the model-year range, for cars named by chassis code. `matchOnly` generations are never picked by year alone.",
+  "porsche": {
+    "356": [
+      { "name": "Pre-A", "from": 1948, "to": 1955 },
+      { "name": "356A", "from": 1956, "to": 1959, "match": "\\b356 A\\b|\\b356A\\b" },
+      { "name": "356B", "from": 1960, "to": 1963, "match": "\\b356 B\\b|\\b356B\\b" },
+      { "name": "356C", "from": 1964, "to": 1965, "match": "\\b356 C\\b|\\b356C\\b" }
+    ],
+    "911": [
+      { "name": "Early 911", "from": 1964, "to": 1973 },
+      { "name": "G-Series", "from": 1974, "to": 1989, "match": "\\b(930|G-Series|Carrera 3\\.2|911SC)\\b" },
+      { "name": "964", "from": 1990, "to": 1994, "match": "\\b964\\b" },
+      { "name": "993", "from": 1995, "to": 1998, "match": "\\b993\\b" },
+      { "name": "996", "from": 1999, "to": 2004, "match": "\\b996(\\.\\d)?\\b" },
+      { "name": "997", "from": 2005, "to": 2011, "match": "\\b997(\\.\\d)?\\b" },
+      { "name": "991", "from": 2012, "to": 2019, "match": "\\b991(\\.\\d)?\\b" },
+      { "name": "992", "from": 2020, "to": 2035, "match": "\\b992(\\.\\d)?\\b" }
+    ],
+    "boxster": [
+      { "name": "986", "from": 1997, "to": 2004, "match": "\\b986\\b" },
+      { "name": "987", "from": 2005, "to": 2012, "match": "\\b987(\\.\\d)?\\b" },
+      { "name": "981", "from": 2013, "to": 2016, "match": "\\b981\\b" }
+    ],
+    "cayman": [
+      { "name": "987", "from": 2006, "to": 2012, "match": "\\b987(\\.\\d)?\\b" },
+      { "name": "981", "from": 2013, "to": 2016, "match": "\\b981\\b" }
+    ],
+    "cayenne": [
+      { "name": "955/957", "from": 2003, "to": 2010 },
+      { "name": "958", "from": 2011, "to": 2018 },
+      { "name": "9Y0", "from": 2019, "to": 2035 }
+    ],
+    "panamera": [
+      { "name": "970", "from": 2010, "to": 2016 },
+      { "name": "971", "from": 2017, "to": 2035 }
+    ]
+  },
+  "chevrolet": {
+    "corvette": [
+      { "name": "C1", "from": 1953, "to": 1962 },
+      { "name": "C2", "from": 1963, "to": 1967 },
+      { "name": "C3", "from": 1968, "to": 1982 },
+      { "name": "C4", "from": 1984, "to": 1996 },
+      { "name": "C5", "from": 1997, "to": 2004 },
+      { "name": "C6", "from": 2005, "to": 2013 },
+      { "name": "C7", "from": 2014, "to": 2019 },
+      { "name": "C8", "from": 2020, "to": 2035 }
+    ],
+    "camaro": [
+      { "name": "1st gen", "from": 1967, "to": 1969 },
+      { "name": "2nd gen", "from": 1970, "to": 1981 },
+      { "name": "3rd gen", "from": 1982, "to": 1992 },
+      { "name": "4th gen", "from": 1993, "to": 2002 },
+      { "name": "5th gen", "from": 2010, "to": 2015 },
+      { "name": "6th gen", "from": 2016, "to": 2024 }
+    ]
+  },
+  "ford": {
+    "mustang": [
+      { "name": "1st gen", "from": 1964, "to": 1973 },
+      { "name": "Mustang II", "from": 1974, "to": 1978 },
+      { "name": "Fox body", "from": 1979, "to": 1993 },
+      { "name": "SN95", "from": 1994, "to": 2004 },
+      { "name": "S197", "from": 2005, "to": 2014 },
+      { "name": "S550", "from": 2015, "to": 2023 },
+      { "name": "S650", "from": 2024, "to": 2035 }
+    ],
+    "bronco": [
+      { "name": "Bronco II", "from": 1983, "to": 1990, "match": "Bronco II\\b", "matchOnly": true },
+      { "name": "Early Bronco", "from": 1966, "to": 1977 },
+      { "name": "Full-size", "from": 1978, "to": 1996 },
+      { "name": "6th gen", "from": 2021, "to": 2035 }
+    ],
+    "thunderbird": [
+      { "name": "Two-seater", "from": 1955, "to": 1957 },
+      { "name": "1958 to 1966", "from": 1958, "to": 1966 },
+      { "name": "1967 to 1997", "from": 1967, "to": 1997 },
+      { "name": "Retro", "from": 2002, "to": 2005 }
+    ],
+    "gt": [
+      { "name": "First gen", "from": 2005, "to": 2006 },
+      { "name": "Second gen", "from": 2017, "to": 2022 }
+    ]
+  },
+  "bmw": {
+    "m3": [
+      { "name": "E30", "from": 1986, "to": 1991, "match": "\\bE30\\b" },
+      { "name": "E36", "from": 1992, "to": 1999, "match": "\\bE36\\b" },
+      { "name": "E46", "from": 2000, "to": 2006, "match": "\\bE46\\b" },
+      { "name": "E90/E92", "from": 2007, "to": 2013, "match": "\\bE9[023]\\b" },
+      { "name": "F80", "from": 2014, "to": 2018, "match": "\\bF80\\b" },
+      { "name": "G80", "from": 2021, "to": 2035, "match": "\\bG8[01]\\b" }
+    ],
+    "m5": [
+      { "name": "E28", "from": 1985, "to": 1988, "match": "\\bE28\\b" },
+      { "name": "E34", "from": 1989, "to": 1995, "match": "\\bE34\\b" },
+      { "name": "E39", "from": 1998, "to": 2003, "match": "\\bE39\\b" },
+      { "name": "E60", "from": 2005, "to": 2010, "match": "\\bE6[01]\\b" },
+      { "name": "F10", "from": 2011, "to": 2017, "match": "\\bF10\\b" },
+      { "name": "F90", "from": 2018, "to": 2024, "match": "\\bF90\\b" },
+      { "name": "G90", "from": 2025, "to": 2035, "match": "\\bG9[09]\\b" }
+    ],
+    "m6": [
+      { "name": "E24", "from": 1983, "to": 1989 },
+      { "name": "E63/E64", "from": 2006, "to": 2010 },
+      { "name": "F12/F13", "from": 2012, "to": 2019 }
+    ],
+    "z4": [
+      { "name": "E85/E86", "from": 2003, "to": 2008 },
+      { "name": "E89", "from": 2009, "to": 2016 },
+      { "name": "G29", "from": 2019, "to": 2035 }
+    ]
+  },
+  "toyota": {
+    "land-cruiser": [
+      { "name": "40 Series", "from": 1960, "to": 1984, "match": "\\b[FBH]J4\\d" },
+      { "name": "55", "from": 1967, "to": 1980, "match": "\\bFJ55\\b", "matchOnly": true },
+      { "name": "70 Series", "from": 1984, "to": 2024, "match": "\\b(70 Series|[FBH]J7\\d|HZJ7\\d|LJ7\\d|GRJ7\\d|VDJ7\\d)", "matchOnly": true },
+      { "name": "60 Series", "from": 1985, "to": 1990, "match": "\\b[FBH]J6\\d" },
+      { "name": "80 Series", "from": 1991, "to": 1997, "match": "\\b(80 Series|FZJ8\\d|HDJ8\\d|FJ80)" },
+      { "name": "100 Series", "from": 1998, "to": 2007, "match": "\\b(100 Series|UZJ100)" },
+      { "name": "200 Series", "from": 2008, "to": 2021, "match": "\\b200 Series" },
+      { "name": "250 Series", "from": 2024, "to": 2035 }
+    ],
+    "supra": [
+      { "name": "Celica Supra", "from": 1979, "to": 1985 },
+      { "name": "A70", "from": 1986, "to": 1992, "match": "\\bA70\\b|\\bMkIII\\b|\\bMk3\\b" },
+      { "name": "A80", "from": 1993, "to": 2002, "match": "\\bA80\\b|\\bMkIV\\b|\\bMk4\\b" },
+      { "name": "A90", "from": 2019, "to": 2035, "match": "\\bA9[01]\\b|\\bGR\\b" }
+    ],
+    "4runner": [
+      { "name": "1st gen", "from": 1984, "to": 1989 },
+      { "name": "2nd gen", "from": 1990, "to": 1995 },
+      { "name": "3rd gen", "from": 1996, "to": 2002 },
+      { "name": "4th gen", "from": 2003, "to": 2009 },
+      { "name": "5th gen", "from": 2010, "to": 2024 },
+      { "name": "6th gen", "from": 2025, "to": 2035 }
+    ],
+    "tacoma": [
+      { "name": "1st gen", "from": 1995, "to": 2004 },
+      { "name": "2nd gen", "from": 2005, "to": 2015 },
+      { "name": "3rd gen", "from": 2016, "to": 2023 },
+      { "name": "4th gen", "from": 2024, "to": 2035 }
+    ],
+    "mr2": [
+      { "name": "AW11", "from": 1985, "to": 1989 },
+      { "name": "SW20", "from": 1990, "to": 1995 },
+      { "name": "Spyder", "from": 2000, "to": 2005 }
+    ]
+  },
+  "mazda": {
+    "mx-5": [
+      { "name": "NA", "from": 1989, "to": 1997, "match": "\\bNA\\b" },
+      { "name": "NB", "from": 1998, "to": 2005, "match": "\\bNB\\b" },
+      { "name": "NC", "from": 2006, "to": 2015, "match": "\\bNC\\b" },
+      { "name": "ND", "from": 2016, "to": 2035, "match": "\\bND\\b" }
+    ],
+    "rx-7": [
+      { "name": "FB", "from": 1979, "to": 1985 },
+      { "name": "FC", "from": 1986, "to": 1992 },
+      { "name": "FD", "from": 1993, "to": 2002 }
+    ]
+  },
+  "jaguar": {
+    "e-type": [
+      { "name": "Series 1", "from": 1961, "to": 1968 },
+      { "name": "Series 2", "from": 1969, "to": 1970 },
+      { "name": "Series 3", "from": 1971, "to": 1975 }
+    ]
+  },
+  "land-rover": {
+    "defender": [
+      { "name": "Classic", "from": 1983, "to": 2016 },
+      { "name": "New Defender", "from": 2020, "to": 2035 }
+    ],
+    "range-rover": [
+      { "name": "Range Rover Sport", "from": 2005, "to": 2035, "match": "Range Rover Sport\\b", "matchOnly": true },
+      { "name": "Classic", "from": 1970, "to": 1995 },
+      { "name": "P38", "from": 1996, "to": 2002 },
+      { "name": "L322", "from": 2003, "to": 2012 },
+      { "name": "L405", "from": 2013, "to": 2021 },
+      { "name": "L460", "from": 2022, "to": 2035 }
+    ]
+  },
+  "jeep": {
+    "wrangler": [
+      { "name": "YJ", "from": 1987, "to": 1995, "match": "\\bYJ\\b" },
+      { "name": "TJ", "from": 1997, "to": 2006, "match": "\\bTJ\\b|\\bLJ\\b" },
+      { "name": "JK", "from": 2007, "to": 2017, "match": "\\bJK\\b|\\bJKU\\b" },
+      { "name": "JL", "from": 2018, "to": 2035, "match": "\\bJL\\b|\\bJLU\\b" }
+    ],
+    "grand-wagoneer": [
+      { "name": "SJ", "from": 1963, "to": 1991 },
+      { "name": "New", "from": 2022, "to": 2035 }
+    ]
+  },
+  "dodge": {
+    "viper": [
+      { "name": "Gen 1", "from": 1992, "to": 1995 },
+      { "name": "Gen 2", "from": 1996, "to": 2002 },
+      { "name": "Gen 3", "from": 2003, "to": 2007 },
+      { "name": "Gen 4", "from": 2008, "to": 2010 },
+      { "name": "Gen 5", "from": 2013, "to": 2017 }
+    ],
+    "challenger": [
+      { "name": "1st gen", "from": 1970, "to": 1974 },
+      { "name": "2nd gen", "from": 1978, "to": 1983 },
+      { "name": "3rd gen", "from": 2008, "to": 2023 }
+    ]
+  },
+  "pontiac": {
+    "firebird": [
+      { "name": "1st gen", "from": 1967, "to": 1969 },
+      { "name": "2nd gen", "from": 1970, "to": 1981 },
+      { "name": "3rd gen", "from": 1982, "to": 1992 },
+      { "name": "4th gen", "from": 1993, "to": 2002 }
+    ],
+    "gto": [
+      { "name": "Classic", "from": 1964, "to": 1974 },
+      { "name": "Modern", "from": 2004, "to": 2006 }
+    ]
+  },
+  "nissan": {
+    "skyline": [
+      { "name": "Before R32", "from": 1957, "to": 1988 },
+      { "name": "R32", "from": 1989, "to": 1994, "match": "\\bR32\\b" },
+      { "name": "R33", "from": 1995, "to": 1998, "match": "\\bR33\\b" },
+      { "name": "R34", "from": 1999, "to": 2002, "match": "\\bR34\\b" }
+    ],
+    "300zx": [
+      { "name": "Z31", "from": 1984, "to": 1989 },
+      { "name": "Z32", "from": 1990, "to": 1996 }
+    ]
+  },
+  "acura": {
+    "nsx": [
+      { "name": "First gen", "from": 1991, "to": 2005 },
+      { "name": "Second gen", "from": 2017, "to": 2022 }
+    ]
+  },
+  "honda": {
+    "s2000": [
+      { "name": "AP1", "from": 2000, "to": 2003, "match": "\\bAP1\\b" },
+      { "name": "AP2", "from": 2004, "to": 2009, "match": "\\bAP2\\b|\\bCR\\b" }
+    ]
+  },
+  "audi": {
+    "r8": [
+      { "name": "First gen", "from": 2008, "to": 2015 },
+      { "name": "Second gen", "from": 2017, "to": 2024 }
+    ]
+  }
+}

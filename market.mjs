@@ -6,16 +6,21 @@
 //   market/summary.json         every make: sales, median, range, sell-through, 90-day change, monthly line
 //   market/models/<make>.json   every model of that make: same, plus price by year, trims, recent sales
 //   market/local.json           local Craigslist asking prices by model (aggregates only, from the scout pool)
+//   market/forsale.json         nationwide Craigslist asking prices + days to sell for the main models (aggregates only)
+//   market/generations.json     (input) generations for models whose name spans decades, e.g. 911 = 964/993/996/...
 //
 //   node market.mjs                 update every make (first run backfills two years)
 //   node market.mjs mclaren ferrari only these
+//   node market.mjs --no-forsale    skip the nationwide for-sale pass (local runs)
 //
 // Everything here is public on GitHub, so local data is medians and counts only: no listings, links or deals.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resultsPage, parseItem, isPart } from './lib/bat.mjs';
+import { resultsPage, parseItem, parseTitle, isPart } from './lib/bat.mjs';
+import { compileGens, genOf } from './lib/gens.mjs';
+import { forSale } from './lib/forsale.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const M = path.join(ROOT, 'market');
@@ -52,6 +57,7 @@ function stats(sales) {
     sellThrough: win.length ? Math.round((sold.length / win.length) * 100) : null,
     median: q(sold, 0.5), mean: sold.length ? Math.round(sold.reduce((a, b) => a + b, 0) / sold.length) : null,
     p25: q(sold, 0.25), p75: q(sold, 0.75), low: sold[0] ?? null, high: sold[sold.length - 1] ?? null,
+    n90: recent.length, nPrior: prior.length,
     median90: m90, change90: m90 && mPrior && recent.length >= 3 && prior.length >= 3 ? Math.round(((m90 - mPrior) / mPrior) * 1000) / 10 : null,
     monthly,
   };
@@ -59,7 +65,21 @@ function stats(sales) {
 
 const slim = (s) => ({ t: s.t, price: s.price, sold: s.sold, year: s.year, miles: s.miles, title: s.title, url: s.url });
 
-function modelDetail(name, sales) {
+const GENS = compileGens(readJson(path.join(M, 'generations.json'), {}));
+
+function genDetail(g, sales) {
+  const st = stats(sales);
+  const trims = new Map();
+  for (const s of sales) if (s.sold && s.t >= now - WINDOW_DAYS * DAY) { const k = s.trim || '(base)'; if (!trims.has(k)) trims.set(k, []); trims.get(k).push(s.price); }
+  return {
+    key: g.key, name: g.name, from: g.from, to: g.to, ...st,
+    trims: [...trims.entries()].map(([trim, ps]) => ({ trim, n: ps.length, median: q(ps.sort((a, b) => a - b), 0.5) })).sort((a, b) => b.n - a.n).slice(0, 8),
+    recent: sales.slice(0, 8).map(slim),
+    top: sales.filter((s) => s.sold && s.t >= now - WINDOW_DAYS * DAY).sort((a, b) => b.price - a.price).slice(0, 3).map(slim),
+  };
+}
+
+function modelDetail(name, sales, gl) {
   const st = stats(sales);
   const byYear = new Map();
   for (const s of sales) if (s.sold && s.t >= now - WINDOW_DAYS * DAY) { if (!byYear.has(s.year)) byYear.set(s.year, []); byYear.get(s.year).push(s.price); }
@@ -70,9 +90,11 @@ function modelDetail(name, sales) {
     byYear: [...byYear.entries()].sort(([a], [b]) => a - b).map(([year, ps]) => ({ year, median: q(ps.sort((a, b) => a - b), 0.5), n: ps.length })),
     trims: [...trims.entries()].map(([trim, ps]) => ({ trim, n: ps.length, median: q(ps.sort((a, b) => a - b), 0.5) }))
       .sort((a, b) => b.n - a.n).slice(0, 12),
-    points: sales.filter((s) => s.sold).slice(0, 600).map((s) => [s.year, s.price, s.t, s.miles]),
+    points: sales.filter((s) => s.sold).slice(0, 900).map((s) => [s.year, s.price, s.t, s.miles, s.gen || '']),
     recent: sales.slice(0, 12).map(slim),
     top: sales.filter((s) => s.sold && s.t >= now - WINDOW_DAYS * DAY).sort((a, b) => b.price - a.price).slice(0, 3).map(slim),
+    gens: gl ? gl.map((g) => [g, sales.filter((s) => s.gen === g.key)]).filter(([, ss]) => ss.length >= 3)
+      .map(([g, ss]) => genDetail(g, ss)).sort((a, b) => a.from - b.from) : undefined,
   };
 }
 
@@ -102,9 +124,15 @@ async function updateMake(mk) {
 }
 
 function build(mk, all) {
+  // Titles are re-read with today's parser, so a parser fix (911SC -> 911) reaches two years of history.
+  for (const s of all) {
+    const p = parseTitle(s.title, mk.titles);
+    if (p) { s.model = p.model; s.trim = p.trim; }
+    s.gen = genOf(GENS[mk.key]?.[slug(s.model)], s.year, s.title);
+  }
   const groups = new Map();
   for (const s of all) { const k = slug(s.model); if (!groups.has(k)) groups.set(k, { name: s.model, sales: [] }); groups.get(k).sales.push(s); }
-  const models = [...groups.values()].map((g) => modelDetail(g.name, g.sales))
+  const models = [...groups.values()].map((g) => modelDetail(g.name, g.sales, GENS[mk.key]?.[slug(g.name)]))
     .filter((m) => m.n >= 2).sort((a, b) => b.n - a.n);
   writeJson(path.join(M, 'models', `${mk.key}.json`), { updated: now, make: mk.name, models });
   const st = stats(all);
@@ -136,7 +164,9 @@ function local() {
 
 async function main() {
   const makes = readJson(path.join(M, 'makes.json'), []);
-  const only = process.argv.slice(2).map((s) => s.toLowerCase());
+  const args = process.argv.slice(2);
+  const noForSale = args.includes('--no-forsale');
+  const only = args.filter((a) => !a.startsWith('--')).map((s) => s.toLowerCase());
   const prev = readJson(path.join(M, 'summary.json'), { makes: [] });
   const out = new Map(prev.makes.map((m) => [m.key, m]));
   for (const mk of makes) {
@@ -148,17 +178,34 @@ async function main() {
     } catch (e) { console.warn(`${mk.name}: ${e.message}`); }
   }
   const list = makes.map((mk) => out.get(mk.key)).filter(Boolean);
-  writeJson(path.join(M, 'summary.json'), { updated: now, windowDays: WINDOW_DAYS, source: 'Bring a Trailer completed auctions', makes: list });
-  // Every model of every make in one small file, for the dashboard's search.
-  const index = [];
+  // Every model (and generation) of every make in one small file, for the dashboard's search and movers.
+  const index = [], units = [], modelsByMake = {};
   for (const mk of makes) {
     const d = readJson(path.join(M, 'models', `${mk.key}.json`), null);
-    for (const m of d?.models || []) index.push({ make: mk.key, makeName: mk.name, key: m.key, name: m.name, n: m.n, median: m.median, change90: m.change90 });
+    modelsByMake[mk.key] = d?.models || [];
+    for (const m of d?.models || []) {
+      const label = (g) => (g.name.toLowerCase().startsWith(m.name.toLowerCase()) ? g.name : `${m.name} ${g.name}`);
+      index.push({ make: mk.key, makeName: mk.name, key: m.key, name: m.name, n: m.n, median: m.median, change90: m.change90 });
+      for (const g of m.gens || []) index.push({ make: mk.key, makeName: mk.name, key: m.key, gen: g.key, name: label(g), n: g.n, median: g.median, change90: g.change90 });
+      // Movers compare like with like: a generation where the model has them, else the model.
+      for (const u of m.gens?.length ? m.gens.map((g) => ({ ...g, label: label(g), gen: g.key })) : [{ ...m, label: m.name, gen: null }]) {
+        if (u.change90 != null && u.n90 >= 15 && u.nPrior >= 15) units.push({ make: mk.key, makeName: mk.name, key: m.key, gen: u.gen, name: u.label, median90: u.median90, change90: u.change90, n90: u.n90 });
+      }
+    }
   }
+  units.sort((a, b) => b.change90 - a.change90);
+  const movers = { up: units.filter((u) => u.change90 > 0).slice(0, 8), down: units.filter((u) => u.change90 < 0).slice(-8).reverse() };
+  writeJson(path.join(M, 'summary.json'), { updated: now, windowDays: WINDOW_DAYS, source: 'Bring a Trailer completed auctions', makes: list, movers });
   writeJson(path.join(M, 'index.json'), { updated: now, models: index });
   const loc = local();
   if (loc) writeJson(path.join(M, 'local.json'), loc);
-  console.log(`summary: ${list.length} makes${loc ? `, local: ${loc.rows.length} models` : ''}`);
+  console.log(`summary: ${list.length} makes${loc ? `, local: ${loc.rows.length} models` : ''}, movers ${movers.up.length}/${movers.down.length}`);
+  if (noForSale || only.length) return;
+  const sp = path.join(M, 'forsale-state.json');
+  const { out: fs2, state } = await forSale({ makes, modelsByMake, gens: GENS, state: readJson(sp, null), log: (l) => console.log(l) });
+  writeJson(path.join(M, 'forsale.json'), fs2);
+  writeJson(sp, state);
+  console.log(`for sale: ${fs2.models.length} models, ${fs2.models.reduce((a, r) => a + r.n, 0)} listings, ${Object.keys(state.ids).length} tracked`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

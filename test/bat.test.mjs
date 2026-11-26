@@ -25,3 +25,14 @@ test('uses the final price, and keeps reserve-not-met results as bids', () => {
   assert.equal(bid.sold, false);
   assert.equal(parseItem({ id: 3, title: '2020 McLaren 600LT', active: true, sold_text: '' }, ['McLaren']), null);
 });
+
+test('folds version letters and second names into one model', () => {
+  const p = parseTitle('1981 Porsche 911SC Coupe', ['Porsche']);
+  assert.equal(p.model, '911'); assert.equal(p.trim, 'SC Coupe');
+  assert.equal(parseTitle('1972 Porsche 911S Targa', ['Porsche']).trim, 'S Targa');
+  assert.equal(parseTitle('1991 Acura NSX-T 5-Speed', ['Acura']).model, 'NSX');
+  assert.equal(parseTitle('1967 Jaguar XKE Series 1 Roadster', ['Jaguar']).model, 'E-Type');
+  assert.equal(parseTitle('1972 Rolls-Royce Silver Shadow', ['Rolls-Royce']).model, 'Silver Shadow');
+  assert.equal(parseTitle('1957 Chevrolet Bel Air Convertible', ['Chevrolet']).model, 'Bel Air');
+  assert.equal(parseTitle('2021 Toyota GR Supra 3.0', ['Toyota']).model, 'Supra');
+});
