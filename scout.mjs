@@ -13,6 +13,7 @@ import { search, searchAll, details } from './lib/craigslist.mjs';
 import { parseTitle, hardFlag, softFlags } from './lib/parse.mjs';
 import { buildModels, valueOf } from './lib/value.mjs';
 import { notify } from './lib/notify.mjs';
+import { renderBoard, ROBOTS, money, cap } from './lib/board.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const STATE = path.join(ROOT, 'data', 'state.json');
@@ -22,7 +23,6 @@ const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'config.json'), 'utf8'));
 const now = Date.now();
 const HOUR = 3600e3;
 
-const money = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function loadState() {
@@ -101,21 +101,22 @@ async function main() {
   for (const l of listings) {
     if (cfg.buy.ownerOnly && !l.owner) continue;
     if (l.price < cfg.buy.minPrice || l.price > cfg.buy.maxPrice || l.hard || l.gone) continue;
-    if (state.center && l.lat && miles(state.center, l) > cfg.radius) continue;
+    const dist = state.center && l.lat ? miles(state.center, l) : null;
+    if (dist != null && dist > cfg.radius) continue;
     if (now - l.posted > cfg.buy.maxAgeHours * HOUR || now - l.lastSeen > 26 * HOUR) continue;
     const v = valueOf(models, l);
     if (!v) continue;
     const d = dealMath(l, v);
-    if (d.ok) screened.push({ l, v, ...d });
+    if (d.ok) screened.push({ l, v, dist, ...d });
   }
   screened.sort((a, b) => b.profit - a.profit);
 
   // Confirm on the listing page: clean title, real odometer, no deal-killers in the text.
   const deals = [];
   for (const s of screened.slice(0, cfg.maxDetailChecks)) {
-    const { l } = s;
+    const { l, dist } = s;
     if (!l.detail || now - l.detail.at > 12 * HOUR) {
-      try { l.detail = { ...(await details(l.url)), at: now }; } catch (e) { console.warn(`details failed ${l.url}: ${e.message}`); continue; }
+      try { l.detail = { ...(await details(l.url)), at: now }; } catch (e) { console.warn(`details failed${process.env.QUIET ? '' : ` ${l.url}`}: ${e.message}`); continue; }
       await sleep(800);
     }
     const det = l.detail;
@@ -128,12 +129,15 @@ async function main() {
     if (!v) continue;
     const d = dealMath({ ...l }, v);
     if (!d.ok) continue;
-    deals.push({ ...l, miles, value: v.value, low: v.low, comps: v.comps, estMiles: v.estMiles, profit: d.profit, pct: d.pct, flags: softFlags(text), condition: det.condition });
+    deals.push({ ...l, dist, miles, value: v.value, low: v.low, comps: v.comps, estMiles: v.estMiles, profit: d.profit, pct: d.pct, flags: softFlags(text), condition: det.condition });
   }
 
   // Alert new deals, and old ones again only after a real price drop.
   // The same car crossposted in two towns counts once (same year/model/odometer).
   let sent = 0;
+  // "All deals" button on each alert. The passphrase rides in the #fragment, which browsers never send to a server.
+  const pass = process.env.BOARD_PASSPHRASE;
+  const boardLink = pass && process.env.BOARD_URL ? `${process.env.BOARD_URL}#k=${encodeURIComponent(pass)}` : null;
   const carKey = (d) => `${d.year}|${d.make}|${d.model}|${d.miles ? Math.round(d.miles / 1000) : d.id}`;
   const alertedCars = new Set(Object.values(state.alerted).map((a) => a.car).filter(Boolean));
   for (const d of deals) {
@@ -142,9 +146,9 @@ async function main() {
     if (!prev && alertedCars.has(carKey(d))) continue;
     if (sent >= cfg.maxAlertsPerRun) break;
     const dropped = prev ? ` (dropped from ${money(prev.price)})` : '';
-    const title = `${money(d.profit)} under · ${d.year} ${cap(d.make)} ${cap(d.model)}`;
+    const title = `${money(d.profit - (cfg.flipCost || 0))} profit · ${d.year} ${cap(d.make)} ${cap(d.model)}`;
     const lines = [
-      `${money(d.price)}${dropped}, worth about ${money(d.value)}`,
+      `${money(d.price)}${dropped} asking, worth about ${money(d.low)}`,
       `${d.miles ? `${Math.round(d.miles / 1000)}k mi${d.estMiles ? ' (est)' : ''}` : 'miles unknown'} · ${d.place || d.area || ''}`.trim(),
       d.title,
       d.flags.length ? `Says: ${d.flags.join(', ')}` : null,
@@ -152,7 +156,7 @@ async function main() {
     ].filter(Boolean);
     if (DRY) console.log(`[dry] would alert: ${title}`);
     else {
-      try { await notify({ title, message: lines.join('\n'), url: d.url, image: d.image }); }
+      try { await notify({ title, message: lines.join('\n'), url: d.url, image: d.image, board: boardLink }); }
       catch (e) { console.warn(`alert failed: ${e.message}`); continue; }
       state.alerted[d.id] = { price: d.price, at: now, car: carKey(d) };
     }
@@ -164,12 +168,29 @@ async function main() {
   fs.writeFileSync(STATE, JSON.stringify(state));
   fs.writeFileSync(path.join(ROOT, 'data', 'deals.json'), JSON.stringify({ at: now, deals }, null, 1));
 
+  // The board is published publicly, so it is only ever written encrypted.
+  const site = path.join(ROOT, 'site');
+  fs.rmSync(site, { recursive: true, force: true });
+  if (pass) {
+    fs.mkdirSync(site, { recursive: true });
+    fs.writeFileSync(path.join(site, 'index.html'), await renderBoard({ at: now, deals: dedupe(deals, carKey), checked: listings.length, cfg }, pass));
+    fs.writeFileSync(path.join(site, 'robots.txt'), ROBOTS);
+    console.log('board: encrypted page written');
+  } else {
+    console.log('board: BOARD_PASSPHRASE not set, skipping');
+  }
+
   // QUIET keeps the deal list out of public CI logs; the phone gets it instead.
   const table = process.env.QUIET ? '' : report(deals);
   console.log(`\n${deals.length} deals, ${sent} alert(s) ${DRY ? 'not sent (dry run)' : 'sent'}\n${table}`);
 }
 
-function cap(s) { return String(s || '').replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/^(Bmw|Gmc|Vw)$/, (m) => m.toUpperCase()); }
+// One row per car: a crossposted car keeps its best-priced listing.
+function dedupe(deals, key) {
+  const best = new Map();
+  for (const d of deals) { const k = key(d); if (!best.has(k) || best.get(k).price > d.price) best.set(k, d); }
+  return [...best.values()];
+}
 function ago(t) { const h = (now - t) / HOUR; return h < 1 ? `${Math.max(1, Math.round(h * 60))} min ago` : h < 48 ? `${Math.round(h)} h ago` : `${Math.round(h / 24)} days ago`; }
 
 function report(deals) {

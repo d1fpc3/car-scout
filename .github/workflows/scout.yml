@@ -21,6 +21,8 @@ jobs:
   scout:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      board: ${{ steps.board.outputs.ready }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,6 +38,8 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          BOARD_PASSPHRASE: ${{ secrets.BOARD_PASSPHRASE }}
+          BOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
           QUIET: '1'
         run: node scout.mjs ${{ inputs.full && '--full' || '' }}
       - uses: actions/cache/save@v4
@@ -52,3 +56,28 @@ jobs:
             git config user.name "car-scout"; git config user.email "car-scout@users.noreply.github.com"
             git commit --allow-empty -m "keepalive" && git push
           fi
+      # The deals board. site/ only exists when BOARD_PASSPHRASE is set, and it only ever
+      # holds the encrypted page + robots.txt; that is all the Pages artifact contains.
+      - name: Check board
+        id: board
+        run: test -f site/index.html && echo "ready=true" >> "$GITHUB_OUTPUT" || echo "ready=false" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.board.outputs.ready == 'true'
+        with:
+          path: site
+
+  # Publishes the encrypted board to GitHub Pages (Settings > Pages > Source: GitHub Actions).
+  board:
+    needs: scout
+    if: needs.scout.outputs.board == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

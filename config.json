@@ -2,6 +2,7 @@
   "postal": "21201",
   "radius": 75,
   "compsRadius": 150,
+  "flipCost": 1000,
   "buy": {
     "minPrice": 1500,
     "maxPrice": 15000,
