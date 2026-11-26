@@ -1,0 +1,19 @@
+{
+  "postal": "21201",
+  "radius": 75,
+  "compsRadius": 150,
+  "buy": {
+    "minPrice": 1500,
+    "maxPrice": 15000,
+    "minProfit": 2000,
+    "maxPctOfValue": 0.8,
+    "minPctOfValue": 0.4,
+    "ownerOnly": true,
+    "maxAgeHours": 72
+  },
+  "fullRefreshHours": 24,
+  "keepDays": 30,
+  "maxDetailChecks": 25,
+  "maxAlertsPerRun": 5,
+  "realertDrop": 400
+}

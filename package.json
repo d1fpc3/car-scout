@@ -1,0 +1,12 @@
+{
+  "name": "car-scout",
+  "private": true,
+  "description": "Craigslist car flip scout: values listings against comps and pushes underpriced ones to your phone",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "scout": "node scout.mjs",
+    "dry": "node scout.mjs --dry",
+    "test": "node --test"
+  }
+}

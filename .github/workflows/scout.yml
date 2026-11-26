@@ -1,0 +1,54 @@
+name: scout
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Force a full comps refresh
+        type: boolean
+        default: false
+
+concurrency:
+  group: scout
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # State (comps pool, what's been alerted) lives in the Actions cache, never in the repo.
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: state-${{ github.run_id }}
+          restore-keys: state-
+      - name: Scout
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          QUIET: '1'
+        run: node scout.mjs ${{ inputs.full && '--full' || '' }}
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data
+          key: state-${{ github.run_id }}
+      # GitHub pauses cron on repos with no commits for 60 days.
+      - name: Keep schedule alive
+        if: github.event_name == 'schedule'
+        run: |
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 45 * 86400 )) ]; then
+            git config user.name "car-scout"; git config user.email "car-scout@users.noreply.github.com"
+            git commit --allow-empty -m "keepalive" && git push
+          fi
