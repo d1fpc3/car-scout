@@ -13,7 +13,7 @@ import { search, searchAll, details } from './lib/craigslist.mjs';
 import { parseTitle, hardFlag, softFlags } from './lib/parse.mjs';
 import { buildModels, valueOf } from './lib/value.mjs';
 import { notify } from './lib/notify.mjs';
-import { renderBoard, ROBOTS, money, cap } from './lib/board.mjs';
+import { boardData, seal, money, cap } from './lib/board.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const STATE = path.join(ROOT, 'data', 'state.json');
@@ -137,7 +137,8 @@ async function main() {
   let sent = 0;
   // "All deals" button on each alert. The passphrase rides in the #fragment, which browsers never send to a server.
   const pass = process.env.BOARD_PASSPHRASE;
-  const boardLink = pass && process.env.BOARD_URL ? `${process.env.BOARD_URL}#k=${encodeURIComponent(pass)}` : null;
+  const boardUrl = process.env.BOARD_URL || 'https://d1fpc3.com/cars/deals/';
+  const boardLink = pass ? `${boardUrl}#k=${encodeURIComponent(pass)}` : null;
   const carKey = (d) => `${d.year}|${d.make}|${d.model}|${d.miles ? Math.round(d.miles / 1000) : d.id}`;
   const alertedCars = new Set(Object.values(state.alerted).map((a) => a.car).filter(Boolean));
   for (const d of deals) {
@@ -168,14 +169,14 @@ async function main() {
   fs.writeFileSync(STATE, JSON.stringify(state));
   fs.writeFileSync(path.join(ROOT, 'data', 'deals.json'), JSON.stringify({ at: now, deals }, null, 1));
 
-  // The board is published publicly, so it is only ever written encrypted.
-  const site = path.join(ROOT, 'site');
-  fs.rmSync(site, { recursive: true, force: true });
+  // The board payload is pushed to a public branch, so it is only ever written encrypted.
+  const out = path.join(ROOT, 'board');
+  fs.rmSync(out, { recursive: true, force: true });
   if (pass) {
-    fs.mkdirSync(site, { recursive: true });
-    fs.writeFileSync(path.join(site, 'index.html'), await renderBoard({ at: now, deals: dedupe(deals, carKey), checked: listings.length, cfg }, pass));
-    fs.writeFileSync(path.join(site, 'robots.txt'), ROBOTS);
-    console.log('board: encrypted page written');
+    fs.mkdirSync(out, { recursive: true });
+    const data = boardData({ at: now, deals: dedupe(deals, carKey), checked: listings.length, cfg });
+    fs.writeFileSync(path.join(out, 'deals.json'), JSON.stringify(await seal(data, pass)));
+    console.log('board: encrypted payload written');
   } else {
     console.log('board: BOARD_PASSPHRASE not set, skipping');
   }

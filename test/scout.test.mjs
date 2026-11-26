@@ -44,27 +44,26 @@ test('values a car from comps and ignores junk prices', () => {
   assert.equal(valueOf(models, { make: 'kia', model: 'soul', year: year - 5, miles: 60000 }), null);
 });
 
-test('board page holds only ciphertext and opens with the passphrase', async () => {
-  const { renderBoard, boardContent, unseal } = await import('../lib/board.mjs');
+test('board payload is ciphertext only and opens with the passphrase', async () => {
+  const { boardData, seal, unseal } = await import('../lib/board.mjs');
   const cfg = { postal: '21201', radius: 75, flipCost: 1000, buy: { minPrice: 1500, maxPrice: 15000, minProfit: 2000, maxAgeHours: 72 } };
   const deals = [
-    { id: '1', year: 2012, make: 'honda', model: 'accord', miles: 140000, price: 5000, low: 8500, posted: Date.now() - 3 * 3600e3, dist: 12.4, place: 'Towson', title: 'SECRET-CAR <script>alert(1)</script>', url: 'https://baltimore.craigslist.org/cto/d/x/1.html', image: 'https://images.craigslist.org/abc_600x450.jpg', flags: ['as-is'] },
-    { id: '2', year: 2010, make: 'toyota', model: 'camry', miles: 120000, price: 4000, low: 6500, posted: Date.now(), title: 'camry', url: 'javascript:alert(1)', image: 'https://evil.example/x.jpg', flags: [] },
+    { id: '2', year: 2010, make: 'toyota', model: 'camry', miles: 120000, price: 4000, low: 6500, posted: 1, place: 'BOWIE', title: 'camry', url: 'javascript:alert(1)', image: 'https://evil.example/x.jpg', flags: [] },
+    { id: '1', year: 2012, make: 'honda', model: 'accord', miles: 140000, price: 5000, low: 8500, posted: 2, dist: 12.4, place: 'Towson', title: 'SECRET-CAR', url: 'https://baltimore.craigslist.org/cto/d/x/1.html', image: 'https://images.craigslist.org/abc_600x450.jpg', flags: ['as-is'] },
   ];
-  const data = { at: Date.now(), deals, checked: 10412, cfg };
+  const data = boardData({ at: 123, deals, checked: 10412, cfg });
+  assert.deepEqual(data.deals.map((d) => d.car), ['2012 Honda Accord', '2010 Toyota Camry'], 'ranked by profit');
+  assert.equal(data.deals[0].profit, 2500, 'profit = value - asking - flip cost');
+  assert.equal(data.deals[0].dist, 12);
+  assert.equal(data.deals[1].place, 'Bowie');
+  assert.equal(data.deals[1].url, null, 'only Craigslist links');
+  assert.equal(data.deals[1].image, null, 'only Craigslist photos');
 
-  const inner = boardContent(data);
-  assert.ok(inner.indexOf('2012 Honda Accord') < inner.indexOf('2010 Toyota Camry'), 'ranked by profit');
-  assert.match(inner, /\$2,500/, 'profit = value - asking - flip cost');
-  assert.ok(!inner.includes('<script>'), 'listing text is escaped');
-  assert.ok(!inner.includes('javascript:') && !inner.includes('evil.example'), 'only Craigslist links and photos');
-
-  const page = await renderBoard(data, 'test pass', 1000);
-  for (const leak of ['SECRET-CAR', 'Accord', 'accord', 'Towson', '10,412', 'craigslist.org/cto']) assert.ok(!page.includes(leak), `page leaks ${leak}`);
-  assert.match(page, /noindex,nofollow/);
-  const box = JSON.parse(page.match(/var BOX = (\{.*?\});/)[1]);
-  assert.equal(await unseal(box, 'test pass'), inner);
+  const box = await seal(data, 'test pass', 1000);
+  const text = JSON.stringify(box);
+  for (const leak of ['SECRET-CAR', 'Accord', 'Towson', '10412', 'craigslist']) assert.ok(!text.includes(leak), `payload leaks ${leak}`);
+  assert.deepEqual(Object.keys(box), ['v', 'kdf', 'hkdf', 'iv', 'ct']);
+  assert.deepEqual(await unseal(box, 'test pass'), data);
   await assert.rejects(unseal(box, 'wrong pass'));
-  const again = JSON.parse((await renderBoard(data, 'test pass', 1000)).match(/var BOX = (\{.*?\});/)[1]);
-  assert.notEqual(again.salt, box.salt, 'fresh salt every build');
+  assert.notEqual((await seal(data, 'test pass', 1000)).hkdf.salt, box.hkdf.salt, 'fresh salt every build');
 });

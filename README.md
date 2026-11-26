@@ -42,18 +42,19 @@ Leave the rest alone unless something looks off.
 
 ## Deals board
 
-Every run also publishes a page with every current deal, best profit first: photo, miles,
-asking, value, profit, distance and how long it's been listed.
-**https://d1fpc3.github.io/car-scout/**
+Every current deal, best profit first, with photo, miles, asking, value, profit, distance
+and how long it's been listed: **https://d1fpc3.com/cars/deals/**
 
-The page is public-hosted but **encrypted**. It holds only AES-GCM ciphertext, which the
-browser opens with the `BOARD_PASSPHRASE` secret. You type it once per device (the browser
-keeps a derived key, not the passphrase). The **All deals** button on each alert carries the
-passphrase in the link's `#k=` fragment, so from the phone it opens straight in. That makes
-the ntfy topic name the real secret, so keep it private. To lock out every device, change the passphrase.
+Each run encrypts the deals (AES-GCM) with the `BOARD_PASSPHRASE` secret and force-pushes
+just the ciphertext as one commit to the `board-data` branch. The page (in d1fpc3-site) fetches
+it and decrypts it in the browser. Nothing readable is ever public. You type the passphrase
+once per device (the browser keeps a derived key, not the passphrase). The **All deals** button
+on each alert carries it in the link's `#k=` fragment, so from the phone it opens straight in.
+That makes the ntfy topic name the real secret, so keep it private. To lock out every device,
+change the passphrase.
 
-One-time setup: Settings → Pages → Source: **GitHub Actions**, then add the
-`BOARD_PASSPHRASE` repo secret (a long random string). Without the secret, the board is skipped.
+One-time setup: add the `BOARD_PASSPHRASE` repo secret (a long random string). Without it,
+the board is skipped.
 
 ## Phone
 

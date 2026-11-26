@@ -39,7 +39,6 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           BOARD_PASSPHRASE: ${{ secrets.BOARD_PASSPHRASE }}
-          BOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
           QUIET: '1'
         run: node scout.mjs ${{ inputs.full && '--full' || '' }}
       - uses: actions/cache/save@v4
@@ -56,28 +55,41 @@ jobs:
             git config user.name "car-scout"; git config user.email "car-scout@users.noreply.github.com"
             git commit --allow-empty -m "keepalive" && git push
           fi
-      # The deals board. site/ only exists when BOARD_PASSPHRASE is set, and it only ever
-      # holds the encrypted page + robots.txt; that is all the Pages artifact contains.
+      # The deals board. board/ only exists when BOARD_PASSPHRASE is set, and it only ever
+      # holds the encrypted payload (no plaintext deal data anywhere public).
       - name: Check board
         id: board
-        run: test -f site/index.html && echo "ready=true" >> "$GITHUB_OUTPUT" || echo "ready=false" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-pages-artifact@v3
+        run: test -f board/deals.json && echo "ready=true" >> "$GITHUB_OUTPUT" || echo "ready=false" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
         if: steps.board.outputs.ready == 'true'
         with:
-          path: site
+          name: board
+          path: board/deals.json
+          retention-days: 1
 
-  # Publishes the encrypted board to GitHub Pages (Settings > Pages > Source: GitHub Actions).
+  # Publishes the encrypted payload as a single orphan commit on the board-data branch
+  # (force-pushed, so history never grows). d1fpc3.com/cars/deals/ reads it from there.
   board:
     needs: scout
     if: needs.scout.outputs.board == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      contents: write
     steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: board
+          path: board
+      - name: Push board-data
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd board
+          git init -q -b board-data
+          git config user.name "car-scout"; git config user.email "car-scout@users.noreply.github.com"
+          git add deals.json
+          git commit -q -m "Encrypted deals board"
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push -q --force "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:board-data
